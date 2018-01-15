@@ -75,10 +75,10 @@ namespace JsonDownloadParse
     
     class Program
     {
-        public static void saveToCsv(RailData deseriarize_data)
+        public static void saveToCsv(RailData deseriarize_data,string output_file_name,string type)
         {
             // デシリアライズしたデータをCSVに書き換え
-            using (var stream_writer = new System.IO.StreamWriter(@"station.csv"))
+            using (var stream_writer = new System.IO.StreamWriter(output_file_name))
             {
                 foreach (var json_parse_data in deseriarize_data.Features)
                 {
@@ -87,18 +87,36 @@ namespace JsonDownloadParse
                     var line_name = json_parse_data.Properties.Linename;
                     var station_name = json_parse_data.Properties.Station;
 
-                    foreach (var coord_data in coordinates_data)
+                    /*foreach (var coord_data in coordinates_data)
                     {
                         var longitude = (double)coord_data[0];
                         var latitude = (double)coord_data[1];
                         Console.WriteLine("{0},{1},{2},{3},{4}", company_name, line_name, station_name, latitude, longitude);
                         stream_writer.WriteLine("{0},{1},{2},{3},{4}", company_name, line_name, station_name, latitude, longitude);
+                    }*/
+
+                    if(type == "station") {
+                        var coord_data = coordinates_data[0];
+
+                        var longitude = (double)coord_data[0];
+                        var latitude = (double)coord_data[1];
+                        Console.WriteLine("{0},{1},{2},{3},{4}", company_name, line_name, station_name, latitude, longitude);
+                        stream_writer.WriteLine("{0},{1},{2},{3},{4}", company_name, line_name, station_name, latitude, longitude);
+                    } else {
+                        foreach (var coord_data in coordinates_data) {
+                            var longitude = (double)coord_data[0];
+                            var latitude = (double)coord_data[1];
+                            Console.WriteLine("{0},{1},{2},{3}", company_name, line_name, latitude, longitude);
+                            stream_writer.WriteLine("{0},{1},{2},{3}", company_name, line_name, latitude, longitude);
+                        }
                     }
+
                 }
             }
         }
 
-        public static string json_data_reader(string filename) {
+        public static string json_data_reader(string filename)
+        {
             // jsonデータを読み込んでデシリアライズしている
             StreamReader sr = new StreamReader(filename);
             return sr.ReadToEnd();
@@ -108,9 +126,12 @@ namespace JsonDownloadParse
         {
             Console.WriteLine("アプリ実行中");
 
-            var json_data = json_data_reader("stationdata.geojson");
+            var station_json_data = json_data_reader("stationdata.geojson");
+            var rail_json_data = json_data_reader("raildata.geojson");
+
             // デシリアライズで用いるLailDataプロパティ他は上の方に書いてあります
-            var deseriarize = JsonConvert.DeserializeObject<RailData>(json_data);
+            var station_deseriarize = JsonConvert.DeserializeObject<RailData>(station_json_data);
+            var rail_deseriarize = JsonConvert.DeserializeObject<RailData>(rail_json_data);
 
             //var count = 1;
 
@@ -128,7 +149,8 @@ namespace JsonDownloadParse
                 }   
             }*/
 
-            saveToCsv(deseriarize);
+            saveToCsv(station_deseriarize, @"station_easy_table.csv","station");
+            saveToCsv(station_deseriarize,@"rail_easy_table.csv","rail");
         }
     }
 }
