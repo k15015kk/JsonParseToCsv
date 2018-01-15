@@ -7,7 +7,7 @@ using GeoJSON.Net;
 
 namespace JsonDownloadParse
 {
-    public class LailData {
+    public class RailData {
         public List<Features> Features {
             get;
             set;
@@ -75,15 +75,42 @@ namespace JsonDownloadParse
     
     class Program
     {
+        public static void saveToCsv(RailData deseriarize_data)
+        {
+            // デシリアライズしたデータをCSVに書き換え
+            using (var stream_writer = new System.IO.StreamWriter(@"station.csv"))
+            {
+                foreach (var json_parse_data in deseriarize_data.Features)
+                {
+                    var coordinates_data = json_parse_data.Geometry.Coordinates;
+                    var company_name = json_parse_data.Properties.Company;
+                    var line_name = json_parse_data.Properties.Linename;
+                    var station_name = json_parse_data.Properties.Station;
+
+                    foreach (var coord_data in coordinates_data)
+                    {
+                        var longitude = (double)coord_data[0];
+                        var latitude = (double)coord_data[1];
+                        Console.WriteLine("{0},{1},{2},{3},{4}", company_name, line_name, station_name, latitude, longitude);
+                        stream_writer.WriteLine("{0},{1},{2},{3},{4}", company_name, line_name, station_name, latitude, longitude);
+                    }
+                }
+            }
+        }
+
+        public static string json_data_reader(string filename) {
+            // jsonデータを読み込んでデシリアライズしている
+            StreamReader sr = new StreamReader(filename);
+            return sr.ReadToEnd();
+        }
+
         static void Main(string[] args)
         {
             Console.WriteLine("アプリ実行中");
 
-            // jsonデータを読み込んでデシリアライズしている
-            StreamReader sr = new StreamReader("stationdata.geojson");
-            var json_data = sr.ReadToEnd();
+            var json_data = json_data_reader("stationdata.geojson");
             // デシリアライズで用いるLailDataプロパティ他は上の方に書いてあります
-            var deseriarize = JsonConvert.DeserializeObject<LailData>(json_data);
+            var deseriarize = JsonConvert.DeserializeObject<RailData>(json_data);
 
             //var count = 1;
 
@@ -101,22 +128,7 @@ namespace JsonDownloadParse
                 }   
             }*/
 
-            // デシリアライズしたデータをCSVに書き換え
-            using (var stream_writer = new System.IO.StreamWriter(@"station.csv")) {
-                foreach (var json_parse_data in deseriarize.Features) {
-                    var coordinates_data = json_parse_data.Geometry.Coordinates;
-                    var company_name = json_parse_data.Properties.Company;
-                    var line_name = json_parse_data.Properties.Linename;
-                    var station_name = json_parse_data.Properties.Station;
-
-                    foreach (var coord_data in coordinates_data) {
-                        var longitude = (double)coord_data[0];
-                        var latitude = (double)coord_data[1];
-                        Console.WriteLine("{0},{1},{2},{3},{4}",company_name,line_name,station_name,latitude,longitude);
-                        stream_writer.WriteLine("{0},{1},{2},{3},{4}",company_name,line_name,station_name,latitude,longitude);
-                    }
-                }
-            }
+            saveToCsv(deseriarize);
         }
     }
 }
