@@ -3,7 +3,6 @@ using System.IO;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using GeoJSON.Net;
 
 namespace JsonDownloadParse
 {
@@ -80,6 +79,8 @@ namespace JsonDownloadParse
             // デシリアライズしたデータをCSVに書き換え
             using (var stream_writer = new System.IO.StreamWriter(output_file_name))
             {
+                stream_writer.WriteLine("{0},{1},{2},{3},{4}", "company", "line","station", "latitude", "longitude");
+
                 foreach (var json_parse_data in deseriarize_data.Features)
                 {
                     var coordinates_data = json_parse_data.Geometry.Coordinates;
@@ -97,22 +98,20 @@ namespace JsonDownloadParse
 
                     if(type == "station") {
                         var coord_data = coordinates_data[0];
-
-                        var longitude = (double)coord_data[0];
-                        var latitude = (double)coord_data[1];
-                        Console.WriteLine("{0},{1},{2},{3},{4}", company_name, line_name, station_name, latitude, longitude);
-                        stream_writer.WriteLine("{0},{1},{2},{3},{4}", company_name, line_name, station_name, latitude, longitude);
+                        csv_file_writer(stream_writer,company_name,line_name,station_name,(double)coord_data[0],(double)coord_data[1]);
                     } else {
                         foreach (var coord_data in coordinates_data) {
-                            var longitude = (double)coord_data[0];
-                            var latitude = (double)coord_data[1];
-                            Console.WriteLine("{0},{1},{2},{3}", company_name, line_name, latitude, longitude);
-                            stream_writer.WriteLine("{0},{1},{2},{3}", company_name, line_name, latitude, longitude);
+                            csv_file_writer(stream_writer, company_name, line_name, station_name, (double)coord_data[0], (double)coord_data[1]);
                         }
                     }
 
                 }
             }
+        }
+
+        public static void csv_file_writer(StreamWriter writer,string company,string line,string station,double lat,double lng) {
+            Console.WriteLine("{0},{1},{2},{3},{4}", company, line, station, lat, lng);
+            writer.WriteLine("{0},{1},{2},{3},{4}", company, line, station, lat, lng);
         }
 
         public static string json_data_reader(string filename)
@@ -131,7 +130,11 @@ namespace JsonDownloadParse
 
             // デシリアライズで用いるLailDataプロパティ他は上の方に書いてあります
             var station_deseriarize = JsonConvert.DeserializeObject<RailData>(station_json_data);
+            saveToCsv(station_deseriarize, @"station_easy_table.csv","station");
+
             var rail_deseriarize = JsonConvert.DeserializeObject<RailData>(rail_json_data);
+            saveToCsv(rail_deseriarize,@"rail_easy_table.csv","rail");
+
 
             //var count = 1;
 
@@ -149,8 +152,6 @@ namespace JsonDownloadParse
                 }   
             }*/
 
-            saveToCsv(station_deseriarize, @"station_easy_table.csv","station");
-            saveToCsv(station_deseriarize,@"rail_easy_table.csv","rail");
         }
     }
 }
